@@ -1,4 +1,4 @@
--module(tuples).
+-module(leap_tuples).
 
 -type group_by_opt()    ::  sort.   
 -type group_by_opts()   ::  #{group_by_opt() => any()}.
