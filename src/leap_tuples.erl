@@ -3,9 +3,8 @@
 -type group_by_opt()    ::  sort.   
 -type group_by_opts()   ::  #{group_by_opt() => any()}.
 -type projection()      ::  [aggregate_op() | pos_integer()] | tuple().
--type aggregate_op()    ::  {function, Op :: atom(), Fields :: [pos_integer()]} 
-                            | {function, {Mod :: module(), 
-                                Op :: atom()} , Fields :: [pos_integer()]}.
+-type aggregate_op()    ::  {Op :: atom(), Fields :: [pos_integer()]} 
+                            | {Mod :: module(), Op :: atom() , Fields :: [pos_integer()]}.
 
 
 -export_type([aggregate_op/0]).
@@ -384,10 +383,10 @@ group_by(Tuples, Projection, Opts) when is_tuple(Projection) ->
 
 group_by(Tuples, Projection, Opts) when is_list(Projection) ->
     Fun = fun
-        ({function, {Mod, Op}, L}, {N, Acc}) -> 
+        ({Mod, Op, L}, {N, Acc}) -> 
             F = {Mod, Op, L, Mod:init(Op)},
             {N, [F|Acc]};
-        ({function, Op, L}, {N, Acc}) -> 
+        ({Op, L}, {N, Acc}) -> 
             F = {
                 leap_built_in_aggregates, 
                 Op,
