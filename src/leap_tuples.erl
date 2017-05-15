@@ -275,7 +275,7 @@ mapfoldr(_, Tuple, _, _, Acc) ->
 -spec prefix(tuple(), tuple()) -> boolean().
 
 prefix(A, B) when tuple_size(A) =< tuple_size(B) ->
-    case ls_unification:prefix_match(A, B) of
+    case leap_unification:prefix_match(A, B) of
         {ok, _} -> true;
         false -> false
     end;
@@ -383,10 +383,10 @@ group_by(Tuples, Projection, Opts) when is_tuple(Projection) ->
 
 group_by(Tuples, Projection, Opts) when is_list(Projection) ->
     Fun = fun
-        ({Mod, Op, L}, {N, Acc}) -> 
+        ({function, {Mod, Op}, L}, {N, Acc}) -> 
             F = {Mod, Op, L, Mod:init(Op)},
             {N, [F|Acc]};
-        ({Op, L}, {N, Acc}) -> 
+        ({function, Op, L}, {N, Acc}) -> 
             F = {
                 leap_built_in_aggregates, 
                 Op,
