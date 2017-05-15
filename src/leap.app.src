@@ -1,0 +1,10 @@
+{application, leap,
+ [
+  {description, "Leapsight's Erlang library for relational programming."},
+  {vsn, "1.0.0"},
+  {modules, []},
+  {registered, []},
+  {applications, [
+  ]},
+  {env, []}
+ ]}.
