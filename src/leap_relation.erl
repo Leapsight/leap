@@ -31,7 +31,7 @@
 %% Relational Operators
 -export([compose/2]).
 -export([extend/3]).
--export([group_by/3]).
+-export([summarize/3]).
 -export([intersect/1]).
 -export([intersect/2]).
 -export([join/2]).
@@ -193,11 +193,11 @@ when ?IS_VAR(A), is_function(F, 1) orelse is_list(F) ->
 %% @doc
 %% @end
 %% -----------------------------------------------------------------------------
--spec group_by(relation(), leap_tuples:projection(), leap_tuples:group_by_opts()) -> relation().
-group_by(#relation{} = R, Proj, Opts) ->
+-spec summarize(relation(), leap_tuples:projection(), leap_tuples:summarize_opts()) -> relation().
+summarize(#relation{} = R, Proj, Opts) ->
     relation(
         terms_to_vars(Proj), 
-        leap_tuples:group_by(tuples(R), terms_to_fields(R, Proj), Opts)).
+        leap_tuples:summarize(tuples(R), terms_to_fields(R, Proj), Opts)).
 
 
 
@@ -410,8 +410,6 @@ rename(#relation{} = R, S) ->
 -spec project(relation(), [leap_var:var()] | tuple()) -> relation().
 project(R, Vars) ->
     relation(Vars, leap_tuples:project(tuples(R), vars_to_fields(R, Vars))).
-
-
 
 
 %% -----------------------------------------------------------------------------
@@ -648,6 +646,9 @@ terms_to_vars(L) when is_list(L) ->
 term_to_var({var, _} = Var) ->
     Var;
 
+term_to_var({as, _, {var, _} = Var}) ->
+    Var;
+
 term_to_var({function, {_Mod, Symbol}, L}) ->
     term_to_var({function, Symbol, L});
 
@@ -659,9 +660,10 @@ term_to_var({function, Symbol, L}) ->
 
 
 %% @private
-terms_to_fields(R, Terms) ->
+terms_to_fields(R, Proj0) ->
+    Proj1 = leap_tuples:map(fun({as, T, _}) -> T; (T) -> T end, Proj0),
     S = maps:from_list(leap_unification:sequenced_variables(R#relation.head)),
-    leap_unification:apply_substitution(Terms, S).
+    leap_unification:apply_substitution(Proj1, S).
 
 
 %% @private

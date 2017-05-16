@@ -7,5 +7,6 @@ L = [
     {http, "admin.api.com", "realm:bar", "/c", c, #{}}
 ].
 R = leap_relation:relation(H, L).
-RR = leap_relation:group_by(R, {{var,scheme}, {var, host}, {function, collect, [{var, path}, {var, mod}, {var,state}]}}, #{}).
-leap_relation:group_by(RR, {{var,scheme}, {function, collect, [{var, host}, {var,<<"CollectOfpathmodstate">>}]}}, #{}).
+RR = leap_relation:summarize(R, {{var,scheme}, {var, host}, {as, {function, collect, [{var, path}, {var, mod}, {var,state}]}, {var, foo}}}, #{}).
+
+leap_relation:summarize(RR, {{var,scheme}, {function, collect, [{var, host}, {var,<<"CollectOfpathmodstate">>}]}}, #{}).

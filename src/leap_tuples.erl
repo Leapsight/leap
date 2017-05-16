@@ -1,15 +1,15 @@
 -module(leap_tuples).
 
--type group_by_opt()    ::  sort.   
--type group_by_opts()   ::  #{group_by_opt() => any()}.
+-type summarize_opt()    ::  sort.   
+-type summarize_opts()   ::  #{summarize_opt() => any()}.
 -type projection()      ::  [aggregate_op() | pos_integer()] | tuple().
 -type aggregate_op()    ::  {Op :: atom(), Fields :: [pos_integer()]} 
                             | {Mod :: module(), Op :: atom() , Fields :: [pos_integer()]}.
 
 
 -export_type([aggregate_op/0]).
--export_type([group_by_opt/0]).
--export_type([group_by_opts/0]).
+-export_type([summarize_opt/0]).
+-export_type([summarize_opts/0]).
 -export_type([projection/0]).
 
 -export([all/2]).
@@ -22,7 +22,7 @@
 -export([extend/2]).
 -export([foldl/3]).
 -export([foldr/3]).
--export([group_by/3]).
+-export([summarize/3]).
 -export([intersect/1]).
 -export([intersect/2]).
 -export([join/4]).
@@ -376,25 +376,26 @@ extend(T, Fun) when is_tuple(T), is_function(Fun, 1) ->
 %% @doc
 %% @end
 %% -----------------------------------------------------------------------------
--spec group_by([tuple()], projection(), group_by_opts()) -> [tuple()].
+-spec summarize([tuple()], projection(), summarize_opts()) -> [tuple()].
 
-group_by(Tuples, Projection, Opts) when is_tuple(Projection) ->
-    group_by(Tuples, tuple_to_list(Projection), Opts);
+summarize(Tuples, Projection, Opts) when is_tuple(Projection) ->
+    summarize(Tuples, tuple_to_list(Projection), Opts);
 
-group_by(Tuples, Projection, Opts) when is_list(Projection) ->
+summarize(Tuples, Projection, Opts) when is_list(Projection) ->
     Fun = fun
-        ({function, {Mod, Op}, L}, {N, Acc}) -> 
-            F = {Mod, Op, L, Mod:init(Op)},
-            {N, [F|Acc]};
-        ({function, Op, L}, {N, Acc}) -> 
-            F = {
+        F({as, Term, _}, Acc) ->
+            F(Term, Acc);
+        F({function, {Mod, Op}, L}, {N, Acc}) -> 
+            {N, [{Mod, Op, L, Mod:init(Op)}|Acc]};
+        F({function, Op, L}, {N, Acc}) -> 
+            Quad = {
                 leap_built_in_aggregates, 
                 Op,
                 L,
                 leap_built_in_aggregates:init(Op)
             },
-            {N, [F|Acc]};
-        (I, {N, Acc}) when is_integer(I) ->
+            {N, [Quad|Acc]};
+        F(I, {N, Acc}) when is_integer(I) ->
             %% We give it the order of the element in the resulting 
             %% grouping tuple
             {N + 1, [N|Acc]}
@@ -403,7 +404,7 @@ group_by(Tuples, Projection, Opts) when is_list(Projection) ->
     {_, L} = lists:foldl(Fun, {1, []}, Projection),
     ProtoProj = lists:reverse(L),
     Fields = [I || I <- Projection, is_integer(I)],
-    Res = do_group_by(Tuples, Fields, ProtoProj, dict:new()),
+    Res = do_summarize(Tuples, Fields, ProtoProj, dict:new()),
 
     case maps:get(sort, Opts, false) of
         true -> lists:sort(Res);
@@ -518,7 +519,7 @@ intersect(L, R) ->
 
 
 %% @private
-do_group_by([H|T], Fields, ProtoCtxt, Acc0) ->
+do_summarize([H|T], Fields, ProtoCtxt, Acc0) ->
     GroupKey = project(H, Fields),
     Ctxt = case dict:find(GroupKey, Acc0) of
         {ok, Val} -> Val;
@@ -528,10 +529,10 @@ do_group_by([H|T], Fields, ProtoCtxt, Acc0) ->
         GroupKey, 
         [iterate(OpCtxt, H) || OpCtxt <- Ctxt], 
         Acc0),
-    do_group_by(T, Fields, ProtoCtxt, Acc1);
+    do_summarize(T, Fields, ProtoCtxt, Acc1);
 
-do_group_by([], _, _, Acc0) ->
-    {_, Acc1} = dict:fold(fun group_by_extend/3, {[], []}, Acc0),
+do_summarize([], _, _, Acc0) ->
+    {_, Acc1} = dict:fold(fun summarize_extend/3, {[], []}, Acc0),
     Acc1.
 
 
@@ -557,15 +558,15 @@ iterate(I, _) when is_integer(I) ->
 
 
 %% @private
-group_by_extend(GroupKey, [{Mod, Op, _, State}|T], {TAcc, Acc}) ->
+summarize_extend(GroupKey, [{Mod, Op, _, State}|T], {TAcc, Acc}) ->
     Value = Mod:terminate(Op, State),
-    group_by_extend(GroupKey, T, {[Value|TAcc], Acc});
+    summarize_extend(GroupKey, T, {[Value|TAcc], Acc});
 
-group_by_extend(GroupKey, [H|T], {TAcc, Acc}) when is_integer(H) ->
+summarize_extend(GroupKey, [H|T], {TAcc, Acc}) when is_integer(H) ->
     Value = element(H, GroupKey),
-    group_by_extend(GroupKey, T, {[Value|TAcc], Acc});
+    summarize_extend(GroupKey, T, {[Value|TAcc], Acc});
 
-group_by_extend(_, [], {TAcc, Acc}) ->
+summarize_extend(_, [], {TAcc, Acc}) ->
     {[], [list_to_tuple(lists:reverse(TAcc))|Acc]}.
 
 
