@@ -217,6 +217,9 @@ is_function_free(Term) when is_map(Term) ->
 
 
 %% @private	
+is_function_free_element(Fun) when is_function(Fun) ->
+	false;
+
 is_function_free_element({function, _, _}) ->
 	false;
 
@@ -755,6 +758,7 @@ apply_to_element({var, _} = Term, S) ->
         {ok, _} = New -> New;
         error -> false
     end; 
+    
 apply_to_element({interval, _, H0, T0} = Term0, S) ->
     Term1 = case apply_to_element(H0, S) of
         {ok, H1} ->
@@ -1650,7 +1654,7 @@ variables_list([H|T], Acc) ->
 
 %% @private
 do_counted_variables(Vars) ->
-    leap_tuples:group_by(Vars, [1, {function, count, [1]}], #{}).
+    leap_tuples:summarize(Vars, [1, {function, count, [1]}], #{}).
 
 
 %% -----------------------------------------------------------------------------
@@ -1782,13 +1786,13 @@ sequenced_terms_element(Value, Acc) ->
 %% @private
 extract_ordered_variables(L) ->
     {Vs, _} = lists:unzip(
-        lists:ukeysort(2, leap_tuples:group_by(L, [1, {function, min, [2]}], #{}))),
+        lists:ukeysort(2, leap_tuples:summarize(L, [1, {function, min, [2]}], #{}))),
     Vs.
 
 %% @private
 extract_distinct_terms(L) ->
     {Vs, _} = lists:unzip(
-        lists:ukeysort(2, leap_tuples:group_by(L, [1, {function, min, [2]}], #{}))),
+        lists:ukeysort(2, leap_tuples:summarize(L, [1, {function, min, [2]}], #{}))),
     Vs.
 
 
