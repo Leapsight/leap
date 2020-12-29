@@ -16,7 +16,7 @@
     var_m2          ::  float()
 }).
 
-   
+
 -record(quantile, {
     init = false    ::  boolean(),
     p               ::  float(), % p-quantile of the distribution
@@ -64,38 +64,38 @@ init(sum_product) -> 0.
 -spec info(aggregate_function()) -> leap_aggregate_function:info().
 
 
-info(avg) -> 
+info(avg) ->
     #{arity => 1, types => [number]};
-info(count) -> 
+info(count) ->
     #{arity => 1, types => [integer]};
-info(max) -> 
+info(max) ->
     #{arity => 1, types => [any]};
-info(mean) -> 
+info(mean) ->
     #{arity => 1, types => [number]};
-info(median) -> 
+info(median) ->
     #{arity => 1, types => [number]};
-info(min) -> 
+info(min) ->
     #{arity => 1, types => [any]};
-info(stddev) -> 
+info(stddev) ->
     #{arity => 1, types => [number]};
-info(sum) -> 
+info(sum) ->
     #{arity => 1, types => [number]};
-info(sum_product) -> 
+info(sum_product) ->
     #{arity => 2, types => [number, number]};
 % Returning collections
-info(collect) -> 
+info(collect) ->
     #{arity => 1, types => [any]};
-info(n_rand) -> 
+info(n_rand) ->
     #{arity => 2, types => [pos_integer, any]};
-info(n_sample) -> 
+info(n_sample) ->
     #{arity => 1, types => [pos_integer, any]}.
 
 
--spec iterate(aggregate_function(), Value :: any(), State :: any()) -> 
+-spec iterate(aggregate_function(), Value :: any(), State :: any()) ->
     NewState :: any().
 
 iterate(collect, Value, State) ->
-    [Value|State];    
+    [Value|State];
 iterate(avg, Value, State) ->
     iterate(mean, Value, State);
 
@@ -157,9 +157,9 @@ merge(_Fun, _State1, State2) ->
 %% -----------------------------------------------------------------------------
 -spec terminate(aggregate_function(), any()) -> Result :: any().
 
-terminate(collect, State) -> 
-    State;
-terminate(avg, State) -> 
+terminate(collect, State) ->
+    lists:reverse(State);
+terminate(avg, State) ->
     terminate(mean, State);
 terminate(count, State) ->
     State;
@@ -214,16 +214,16 @@ psqr(Qs) when is_list(Qs) ->
 %% @end
 %% -----------------------------------------------------------------------------
 psqr_add(Value, #psqr{} = St) ->
-    Min = case St#psqr.min of 
-        pos_infinity -> Value; 
+    Min = case St#psqr.min of
+        pos_infinity -> Value;
         (_) -> min(St#psqr.min, Value)
     end,
-    Max = case St#psqr.max of 
-        neg_infinity -> Value; 
+    Max = case St#psqr.max of
+        neg_infinity -> Value;
         (_) -> max(St#psqr.max, Value)
     end,
     Delta = Value - St#psqr.avg,
-    Avg = (St#psqr.count * St#psqr.avg + Value) 
+    Avg = (St#psqr.count * St#psqr.avg + Value)
             / (St#psqr.count + 1),
     Var = St#psqr.var_m2 + Delta * (Value - Avg),
     Skew = St#psqr.skew_m3 + math:pow(Value - Avg, 3.0),
@@ -283,15 +283,15 @@ psqr_results(St) ->
 
 %% -----------------------------------------------------------------------------
 %% @doc
-%% Creates a quantile 
+%% Creates a quantile
 %% @end
 %% -----------------------------------------------------------------------------
 quantile(P) when is_float(P), P >= 0.0, P =< 1.0 ->
     #quantile{
-        p = P,        
-        len = ?MARKER_LEN,  
-        dn = {0, P/2, P, (1 + P)/2, 1},    
-        npos = {1, 1 + 2 * P, 1 + 4 * P, 3 + 2 * P, 5},    
+        p = P,
+        len = ?MARKER_LEN,
+        dn = {0, P/2, P, (1 + P)/2, 1},
+        npos = {1, 1 + 2 * P, 1 + 4 * P, 3 + 2 * P, 5},
         pos = list_to_tuple(lists:seq(1, ?MARKER_LEN)),
         heights = {}
     }.
@@ -320,10 +320,10 @@ quantile_add(Value, #quantile{} = Q0) ->
         true ->
             {setelement(1, Heights0, Value), 2};
         false ->
-            try 
+            try
                 Fun = fun
-                    (I, Acc) 
-                    when element(I - 1, Acc) =< Value andalso 
+                    (I, Acc)
+                    when element(I - 1, Acc) =< Value andalso
                     Value < element(I, Acc) ->
                         throw(2);
                     (_, Acc) ->
@@ -350,7 +350,7 @@ quantile_add(Value, #quantile{} = Q0) ->
                 Acc;
             (I, Acc) ->
                 setelement(I, Acc, element(I, Acc) + 1)
-        end, 
+        end,
         Q0#quantile.pos,
         lists:seq(1, Len)
     ),
@@ -372,9 +372,9 @@ quantile_adjust(#quantile{} = St) ->
         N = element(I, St#quantile.pos),
         Q = element(I, St#quantile.heights),
         D0 = element(I, St#quantile.npos) - N,
-        case 
+        case
             (D0 >= 1 andalso element(I + 1, St#quantile.pos) - N > 1) orelse
-            (D0 =< -1 andalso element(I - 1, St#quantile.pos) - N < -1) 
+            (D0 =< -1 andalso element(I - 1, St#quantile.pos) - N < -1)
         of
             true ->
                 D1 = trunc(D0/abs(D0)),
@@ -390,7 +390,7 @@ quantile_adjust(#quantile{} = St) ->
                             pos = setelement(I, St#quantile.heights, N + D1)
                         };
                     false ->
-                        QN1 = Q + D1 * 
+                        QN1 = Q + D1 *
                             (element(I + D1, St#quantile.heights) - Q) /
                             (element(I + D1, St#quantile.pos) - N),
                         Acc#quantile{
