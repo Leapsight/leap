@@ -1,24 +1,24 @@
 %% =============================================================================
-%% Copyright (C) NGINEO LIMITED 2011 - 2016. All rights reserved.
+%% Copyright (C) Leapsight 2011 - 2021. All rights reserved.
 %% =============================================================================
 
 %% -----------------------------------------------------------------------------
 %% @doc
-%% This module implements the unification and matching algorithms, plus 
-%% ancilliary utilities such as checking for ground terms, existence of 
+%% This module implements the unification and matching algorithms, plus
+%% ancilliary utilities such as checking for ground terms, existence of
 %% variables and substitution handling.
 %%
 %% Unification and matching can be applied to lists, tuples and maps, and works
 %% with the following special term types:
-%% 
+%%
 %% * leap_var:var() - a variable.
 %% * leap_interval:interval() - an interval whose elemenets can contain variables
 %% * {function, any(), Args :: list()} - whose Args can contain variables.
-%% * {const, A :: any()} - a way of telling the algorithms that the wrapped 
+%% * {const, A :: any()} - a way of telling the algorithms that the wrapped
 %% term A is a constant.
-%% * {min, A :: any()} - a special handling of a constant A. When the 
+%% * {min, A :: any()} - a special handling of a constant A. When the
 %% unification and matching algorithms find this term together with a possibly
-%% matching term B they will fail iff B is not a variable or another constant 
+%% matching term B they will fail iff B is not a variable or another constant
 %% whose value is more than or equal to the constant A.
 %% * any() - any other term is considered a constant.
 %% @end
@@ -69,9 +69,9 @@
 
 %% -----------------------------------------------------------------------------
 %% @doc
-%% Applies a substitution S to term Term, returning a copy of 
+%% Applies a substitution S to term Term, returning a copy of
 %% Term replacing every occurrence of each
-%% variable in the term with the value mapped for that variable in the 
+%% variable in the term with the value mapped for that variable in the
 %% Substitution.
 %% @end
 %% -----------------------------------------------------------------------------
@@ -87,9 +87,9 @@ apply_substitution(Term, S) when is_map(Term), is_map(S) ->
 
 %% -----------------------------------------------------------------------------
 %% @doc Returns a new empty substitution.
-%% A substitution θ is a mapping from terms to terms which is the identity on 
+%% A substitution θ is a mapping from terms to terms which is the identity on
 %% all constants.
-%% A substitution is defined as a finite set of mappings from variables to 
+%% A substitution is defined as a finite set of mappings from variables to
 %% terms where each mapping must be unique,
 %% because mapping the same variable to two different terms would be ambiguous.
 %% For each substitution θ and atom q(tl,t2), let θ(q(tl,t2)) denote the atom q
@@ -108,11 +108,11 @@ create_substitution() ->
 
 
 %% -----------------------------------------------------------------------------
-%% @doc Creates and initialises a new substitution where all variables are 
+%% @doc Creates and initialises a new substitution where all variables are
 %% mapped to the no_substitution atom.
-%% A substitution θ is a mapping from terms to terms which is the identity on 
+%% A substitution θ is a mapping from terms to terms which is the identity on
 %% all constants.
-%% A substitution is defined as a finite set of mappings from variables to 
+%% A substitution is defined as a finite set of mappings from variables to
 %% terms where each mapping must be unique,
 %% because mapping the same variable to two different terms would be ambiguous.
 %% For each substitution θ and atom q(tl,t2), let θ(q(tl,t2)) denote the atom q
@@ -145,7 +145,7 @@ create_substitution(L) when is_list(L) ->
 
 %% -----------------------------------------------------------------------------
 %% @doc
-%% A substitution θ is a mapping from terms to terms which is the identity on 
+%% A substitution θ is a mapping from terms to terms which is the identity on
 %% all constants.
 %% For each substitution θ and atom q(tl,t2), let θ(q(tl,t2)) denote the atom q
 %% (θ(tl), θ(t~)).
@@ -161,18 +161,18 @@ create_substitution(L) when is_list(L) ->
 -spec create_substitution(
     Vars :: [leap_var:var()] | function(), Values :: list()) -> map().
 
-create_substitution(L1, L2) 
+create_substitution(L1, L2)
 when is_list(L1), is_list(L2), length(L1) =:= length(L2) ->
 	maps:from_list(
         [{K, V} || {K, V} <- lists:zip(L1, L2), ?IS_VAR(K)]);
 
 
 %% -----------------------------------------------------------------------------
-%% @doc Creates and initialised a new substitution by taking a function from 
+%% @doc Creates and initialised a new substitution by taking a function from
 %% Variables to Substitutions,
-%% a list of Variables and produces a list of Substitutions by applying the 
+%% a list of Variables and produces a list of Substitutions by applying the
 %% function to every element in the list.
-%% This function is used to obtain the return values. The evaluation order is 
+%% This function is used to obtain the return values. The evaluation order is
 %% implementation dependent.
 %%
 %% If any element of list L that is not an leap_var:var() will be ignored.
@@ -216,7 +216,7 @@ is_function_free(Term) when is_map(Term) ->
     lists:all(fun is_function_free_element/1, maps:values(Term)).
 
 
-%% @private	
+%% @private
 is_function_free_element(Fun) when is_function(Fun) ->
 	false;
 
@@ -276,10 +276,10 @@ is_constant_element(_) ->
 
 
 %% -----------------------------------------------------------------------------
-%% @doc 
+%% @doc
 %% Returns true if substitution is idempotent or false if it is not.
 %% A substitution θ is idempotent if θθ = θ.
-%% It is known that θ = {x1/t1,...,xk/tk} is idempotent if none of x1,...,xk 
+%% It is known that θ = {x1/t1,...,xk/tk} is idempotent if none of x1,...,xk
 %% occurs in any t1,...,tk.
 %% @end
 %% -----------------------------------------------------------------------------
@@ -297,7 +297,7 @@ is_idempotent_substitution(S) when is_map(S) ->
 %% This function is equivalent to subsumes(Term2, Term1).
 %% @end
 %% -----------------------------------------------------------------------------
--spec is_instance(tuple()| list()| map(), tuple()| list()| map()) -> 
+-spec is_instance(tuple()| list()| map(), tuple()| list()| map()) ->
     {ok, map()} | false.
 
 is_instance(A, B) ->
@@ -306,7 +306,7 @@ is_instance(A, B) ->
 
 %% -----------------------------------------------------------------------------
 %% @doc
-%% Returns whether the substitution S is the most general unifier (mgu) for the 
+%% Returns whether the substitution S is the most general unifier (mgu) for the
 %% terms Term1 and Term2
 %% @end
 %% -----------------------------------------------------------------------------
@@ -324,12 +324,12 @@ is_unifier(S, Term1, Term2) when is_map(S) ->
 
 
 %% -----------------------------------------------------------------------------
-%% @doc 
+%% @doc
 %% Returns a new substitution in which any mapping {X -> X} has been eliminated.
 %% A substitution θ is idempotent if θθ = θ.
-%% It is known that θ = {x1/t1,...,xk/tk} is idempotent if none of x1,...,xk 
+%% It is known that θ = {x1/t1,...,xk/tk} is idempotent if none of x1,...,xk
 %% occurs in any t1,...,tk.
-%% Our unification algorithm produces substitutions where is possible to find 
+%% Our unification algorithm produces substitutions where is possible to find
 %% {X -> X}, which according
 %% to Ullman is the right thing to do. This function eliminates those mappings.
 %% @end
@@ -395,7 +395,7 @@ prefix_match(A, B) ->
 
 
 %% -----------------------------------------------------------------------------
-%% @doc 
+%% @doc
 %% Returns the left side of the substitution.
 %% Notice that domain will only return distinct terms i.e. it treats the substitution as an idempotent one.
 %% @end
@@ -407,9 +407,9 @@ substitution_domain(S) ->
 
 
 %% -----------------------------------------------------------------------------
-%% @doc 
+%% @doc
 %% Returns the right side of the substitution.
-%% Notice that domain will only return distinct terms i.e. it treats the 
+%% Notice that domain will only return distinct terms i.e. it treats the
 %% substitution as an idempotent one.
 %% @end
 %% -----------------------------------------------------------------------------
@@ -420,7 +420,7 @@ substitution_range(S) ->
 
 
 %% -----------------------------------------------------------------------------
-%% @doc 
+%% @doc
 %% Returns a list of mapping pairs {Var, Substitution :: term()}.
 %% @end
 %% -----------------------------------------------------------------------------
@@ -432,12 +432,12 @@ substitution_to_list(S) ->
 
 %% -----------------------------------------------------------------------------
 %% @doc Returns the composition of two substitutions.
-%% Let θ = {x1/t1, . . . , xk/tk} and δ = {y1/s1, . . . , yh/sh} be 
+%% Let θ = {x1/t1, . . . , xk/tk} and δ = {y1/s1, . . . , yh/sh} be
 %% substitutions (where x1, . . . , xk) are pairwise distinct variables,
 %% and y1, . . . , yh are also pairwise distinct variables.
-%% Then the composition θδ of θ and δ is the substitution obtained from the 
+%% Then the composition θδ of θ and δ is the substitution obtained from the
 %% sequence {x1/(t1δ), . . . , xk/(tkδ), y1/s1, . . . , yh/sh}
-%% by deleting any binding xi/(tiδ) for which xi = (tiδ) and deleting any 
+%% by deleting any binding xi/(tiδ) for which xi = (tiδ) and deleting any
 %% binding yj/sj for which yj ∈ {x1,...,xk}.
 %% Properties:
 %% - The composition of substitutions is not commutative i.e. σθ =/= θσ.
@@ -467,10 +467,10 @@ substitution_to_list(S) ->
 %     maps:merge(B, A1).
 
 substitution_composition(Theta0, Delta) ->
-    %% We first apply the Theta and eliminate pairs where X == Tsub 
-	% L1 = [{X, Tsub} || 
-    %         {X, Tsub} <- [{X, apply_substitution(T, Delta)} || 
-    %             {X, T} <- maps:to_list(Theta0)], 
+    %% We first apply the Theta and eliminate pairs where X == Tsub
+	% L1 = [{X, Tsub} ||
+    %         {X, Tsub} <- [{X, apply_substitution(T, Delta)} ||
+    %             {X, T} <- maps:to_list(Theta0)],
     %         X =/= Tsub],
 
     Apply = fun(X, T, Acc) ->
@@ -480,11 +480,11 @@ substitution_composition(Theta0, Delta) ->
         end,
         case {X, TSub} of
             {X, X} ->
-                %% We delete any binding xi/(tiδ) for which xi = (tiδ) 
+                %% We delete any binding xi/(tiδ) for which xi = (tiδ)
                 %% We deleting any binding yj/sj for which yj ∈ {x1,...,xk}.
                 maps:remove(X, Acc);
             {X, TSub} ->
-                %% By updating we are automatically replacing any binding 
+                %% By updating we are automatically replacing any binding
                 %% yj/sj for which yj ∈ {x1,...,xk}.
                 maps:put(X, TSub, Acc)
         end
@@ -506,12 +506,12 @@ substitution_restriction(S, Vars) ->
 %% -----------------------------------------------------------------------------
 %% @doc
 %% Returns whether the first term subsumes the second.
-%% Notes: This mirrors the implementation of match/2 but allowing a non-ground 
+%% Notes: This mirrors the implementation of match/2 but allowing a non-ground
 %% second argument and treating it as it if was.
 %% @end
 %% -----------------------------------------------------------------------------
 -spec subsumes(
-    A :: tuple() | list() | map(), B :: tuple() | list() | map()) -> 
+    A :: tuple() | list() | map(), B :: tuple() | list() | map()) ->
     {ok, map()} | false.
 
 subsumes(A, B) ->
@@ -521,12 +521,12 @@ subsumes(A, B) ->
 %% -----------------------------------------------------------------------------
 %% @doc
 %% Returns whether the first term subsumes the second.
-%% Notes: This mirrors the implementation of match/2 but allowing a non-ground 
+%% Notes: This mirrors the implementation of match/2 but allowing a non-ground
 %% second argument and treating it as it if was.
 %% @end
 %% -----------------------------------------------------------------------------
 -spec subsumes(
-    A :: tuple() | list() | map(), B :: tuple() | list() | map(), map()) -> 
+    A :: tuple() | list() | map(), B :: tuple() | list() | map(), map()) ->
     {ok, map()} | false.
 
 subsumes(A, A, S) when is_tuple(A); is_list(A); is_map(A) ->
@@ -547,7 +547,7 @@ subsumes(_, _, _) ->
 
 
 %% -----------------------------------------------------------------------------
-%% @doc 
+%% @doc
 %% Returns the maximal nesting depth of function symbols occurring in the term.
 %% @end
 %% -----------------------------------------------------------------------------
@@ -630,7 +630,7 @@ finish_unify({ok, S}) ->
 
 variables(Term) when is_tuple(Term) ->
     lists:usort(variables_tuple(Term));
-    
+
 variables(Term) when is_list(Term) ->
     lists:usort(variables_list(Term));
 
@@ -647,7 +647,7 @@ variables(Term) when is_map(Term) ->
 counted_variables(Term) when is_tuple(Term) ->
     % variables_tuple does not dedup nor sort
     do_counted_variables([{Var} || Var <- variables_tuple(Term)]);
-    
+
 counted_variables(Term) when is_list(Term) ->
     do_counted_variables([{Var} || Var <- variables_list(Term)]);
 
@@ -687,7 +687,7 @@ distinct_terms(Term) ->
 
 sequenced_variables(Term) when is_tuple(Term) ->
     sequenced_variables_tuple(Term);
-    
+
 sequenced_variables(Term) when is_list(Term) ->
     sequenced_variables_list(Term);
 
@@ -703,7 +703,7 @@ sequenced_variables(Term) when is_map(Term) ->
 
 sequenced_terms(Term) when is_tuple(Term) ->
     sequenced_terms_tuple(Term);
-    
+
 sequenced_terms(Term) when is_list(Term) ->
     sequenced_terms_list(Term);
 
@@ -757,13 +757,13 @@ apply_to_element({var, _} = Term, S) ->
     case maps:find(Term, S) of
         {ok, _} = New -> New;
         error -> false
-    end; 
-    
+    end;
+
 apply_to_element({interval, _, H0, T0} = Term0, S) ->
     Term1 = case apply_to_element(H0, S) of
         {ok, H1} ->
              setelement(3, Term0, H1);
-        false ->    
+        false ->
             Term0
     end,
     case apply_to_element(T0, S) of
@@ -824,8 +824,8 @@ apply_to_map(M, S) ->
 
 term_depth_tuple(Term) ->
     leap_tuples:foldl(
-        fun(E, Acc) -> erlang:max(term_depth_element(E), Acc) end, 
-        0, 
+        fun(E, Acc) -> erlang:max(term_depth_element(E), Acc) end,
+        0,
         Term).
 
 
@@ -891,7 +891,7 @@ unify_tuples(_, _, _, _, S) ->
 
 unify_lists([], [], S) ->
     {ok, S};
-    
+
 unify_lists([H1|T1], [H2|T2], S0) when length(T1) =:= length(T2) ->
     case unify_element(H1, H2, S0) of
 		{ok, S1} ->
@@ -910,25 +910,25 @@ unify_lists(_, _, _) ->
 %% -----------------------------------------------------------------------------
 unify_lists2([], [], S) ->
     {ok, S};
-    
+
 unify_lists2(L1, L2, S) when length(L1) =:= length(L2) ->
-	%% Initially each unique term will become a member of its own equivalence 
+	%% Initially each unique term will become a member of its own equivalence
     %% class (a set).
 	% DSets0 = leap_disjoint_sets:add(
     %     leap_disjoint_sets:from_map(S), lists:append(L1, L2)),
     DSets0 = leap_disjoint_sets:from_map(S),
 
-    case unify_terms2(L1, L2, DSets0) of 
+    case unify_terms2(L1, L2, DSets0) of
 		{ok, DSets1} ->
-			%% From the constructed equivalence classes we need to perform 
-            %% a second phase in order to unify the children of the existing 
+			%% From the constructed equivalence classes we need to perform
+            %% a second phase in order to unify the children of the existing
             %% function symbols
-			Fun = fun(Class, OuterAcc0) -> 
+			Fun = fun(Class, OuterAcc0) ->
 				case [F || {function, _, _} = F <- Class] of
-					[] -> 
+					[] ->
 						OuterAcc0;
 					[H|T] ->
-						InnerFun = fun(X, InnerAcc0) -> 
+						InnerFun = fun(X, InnerAcc0) ->
 							case unify_terms2(H, X, InnerAcc0) of
 								{ok, InnerAcc1} -> InnerAcc1;
 								false -> InnerAcc0
@@ -940,11 +940,11 @@ unify_lists2(L1, L2, S) when length(L1) =:= length(L2) ->
 			DSets2 = leap_disjoint_sets:fold(DSets1, Fun, DSets1),
 			% DSets3 = lists:foldl(Fun, DSets1, leap_disjoint_sets:to_external(DSets1)),
 
-			%% Finally, we need to find a representative expression for each 
-            %% equivalence class in order to build a substitution that unifies 
+			%% Finally, we need to find a representative expression for each
+            %% equivalence class in order to build a substitution that unifies
             %% both terms
 			find_unifier(L1, L2, DSets2);
-		false -> 
+		false ->
 			false
 	end;
 
@@ -956,8 +956,8 @@ unify_lists2(_, _, _) ->
 
 %% -----------------------------------------------------------------------------
 %% @private
-%% @doc 
-%% This function is part of the unification algorithm. 
+%% @doc
+%% This function is part of the unification algorithm.
 %% It is used by unify2/2.
 %% @end
 %% -----------------------------------------------------------------------------
@@ -978,18 +978,18 @@ unify_terms2([H|T1], [H|T2], DSets) ->
 unify_terms2([H1|T1], [H2|T2], DSets0) ->
     DSets1 = leap_disjoint_sets:add(DSets0, [H1, H2]),
 	case unify_terms2(H1, H2, DSets1) of
-		{ok, DSets2} -> 
+		{ok, DSets2} ->
             unify_terms2(T1, T2, DSets2);
         false ->
             false
 	end;
 
 
-unify_terms2({function, Symbol, L1} = T1, {function, Symbol, L2} = T2, DSets0) 
+unify_terms2({function, Symbol, L1} = T1, {function, Symbol, L2} = T2, DSets0)
 when length(L1) == length(L2) ->
-	%% We add the function symbols and their arguments to the disjoint sets, 
+	%% We add the function symbols and their arguments to the disjoint sets,
 	%% each one belonging to their own set.
-	%% If the function symbols were already in the disjoint set 
+	%% If the function symbols were already in the disjoint set
     %% this has no effect.
 	DSets1 = leap_disjoint_sets:add(DSets0, lists:append([[T1], [T2], L1, L2])),
 	%% We define the two functions to be equivalent by merging their classes
@@ -998,9 +998,9 @@ when length(L1) == length(L2) ->
 
 unify_terms2(
     {interval, Type, F1, To1} = T1, {interval, Type, F2, To2} = T2, DSets0) ->
-    %% We add the function symbols and their arguments to the disjoint sets, 
+    %% We add the function symbols and their arguments to the disjoint sets,
 	%% each one belonging to their own set.
-	%% If the intervals were already in the disjoint set 
+	%% If the intervals were already in the disjoint set
     %% this has no effect.
     L1 = [F1, To1],
     L2 = [F2, To2],
@@ -1010,7 +1010,7 @@ unify_terms2(
 	unify_terms2(L1, L2, leap_disjoint_sets:merge(DSets1, T1, T2));
 
 unify_terms2({var, _} = T1, T2, DSets0) ->
-	%% We add the function arguments to the disjoint sets, 
+	%% We add the function arguments to the disjoint sets,
 	%% each one belonging to their own set
     DSets1 = leap_disjoint_sets:add(DSets0, [T1, T2]),
     DSets2 = case T2 of
@@ -1029,18 +1029,18 @@ unify_terms2(T1, {var, _} = T2, DSets) ->
 	unify_terms2(T2, T1, DSets);
 
 unify_terms2(_, _, _DSets) ->
-	%% If any of the terms are labeled with two different symbols, 
-	%% neither of which is a variable, 
+	%% If any of the terms are labeled with two different symbols,
+	%% neither of which is a variable,
 	%% then there is no unifier - Ullman p.762
     %% If two functions have different symbols or arity then there is no unifier
-	%% There is no way X can become "f of something" and "g of something" - 
+	%% There is no way X can become "f of something" and "g of something" -
     %% Ullman p.764
 	false.
 
 
 %% -----------------------------------------------------------------------------
 %% @private
-%% @doc 
+%% @doc
 %% Part of the unification algorithm. This function is used by unify_terms2/3.
 %% @end
 %% -----------------------------------------------------------------------------
@@ -1056,13 +1056,13 @@ unify_var2({var, _Name} = T1, T2, DSets) ->
 %% @end
 %% -----------------------------------------------------------------------------
 %% TODO Make this function more efficient (consider adding metadata to all datalog terms)
--spec find_unifier(list(), list(), leap_disjoint_sets:leap_disjoint_sets()) -> 
+-spec find_unifier(list(), list(), leap_disjoint_sets:leap_disjoint_sets()) ->
 	{ok, map()} | false.
 
 find_unifier(L1, L2, DSets) ->
-	%% We initialise Susbtitutions with all the variables mapped to 
+	%% We initialise Susbtitutions with all the variables mapped to
     %% no_substitution.
-	%% By applying the algorithm we will incrementally replace no_substitution 
+	%% By applying the algorithm we will incrementally replace no_substitution
     %% with a valid substitution for each variable map
 	Vars = lists:usort(lists:append(variables(L1), variables(L2))),
     %% We merge with the received substitution S
@@ -1072,23 +1072,23 @@ find_unifier(L1, L2, DSets) ->
 	%% Here we will apply the following algorithm:
 	%% We classify the defined equivalent classes (disjoint sets) into 3 types:
 	%% - Type 1: an equivalence class which has only variable symbols.
-	%% - Type 2: an equivalence class which has a constant symbol. By 
-    %% definition this set should contain at most one constant symbol and 
-    %% cannot contain a function symbol.  Otherwise, there was an error in 
+	%% - Type 2: an equivalence class which has a constant symbol. By
+    %% definition this set should contain at most one constant symbol and
+    %% cannot contain a function symbol.  Otherwise, there was an error in
     %% generating the equivalence classes.
-	%% - Type 3: an equivalence class which has at least one function symbol. 
-	%% By definition this class cannot contain a constant symbol. Otherwise, 
+	%% - Type 3: an equivalence class which has at least one function symbol.
+	%% By definition this class cannot contain a constant symbol. Otherwise,
     %% there was an error in generating the equivalence classes.
-	
-	
+
+
     {Rest, Type3s} = lists:partition(
-        fun(C) -> 
+        fun(C) ->
             Pred = fun
-                ({function, _, _}) -> true; 
-                (_) -> false 
+                ({function, _, _}) -> true;
+                (_) -> false
             end,
-            lists:any(Pred, C) == false 
-        end, 
+            lists:any(Pred, C) == false
+        end,
         AllClasses),
 
 	{Type2s, Type1s} = lists:partition(
@@ -1096,79 +1096,79 @@ find_unifier(L1, L2, DSets) ->
 
     % io:format("Classes ~nType1: ~p~nType2: ~p~nType3:~p~n", [Type1s, Type2s, Type3s]),
 
-	%% Then we need to select a leader symbol per equivalence class in order to 
-    %% build a representative substitution for each class. For that we apply 
+	%% Then we need to select a leader symbol per equivalence class in order to
+    %% build a representative substitution for each class. For that we apply
     %% the following rules:
-	%% Rule 1: For a Type 1 set, pick any variable as a leader. 
-	%% Then for each variable in the class (including the leader) assign the 
-    %% leader as its substitution e.g. if the class is [X,Y,Z] and X is 
-    %% designated as leader then this operation will return the substitution 
-    %% [{X,X}, {Y,X}, {Z,X}]. This last step will produce a substitution that 
+	%% Rule 1: For a Type 1 set, pick any variable as a leader.
+	%% Then for each variable in the class (including the leader) assign the
+    %% leader as its substitution e.g. if the class is [X,Y,Z] and X is
+    %% designated as leader then this operation will return the substitution
+    %% [{X,X}, {Y,X}, {Z,X}]. This last step will produce a substitution that
     %% is not idempotent (see {@link make_idempotent_substitution/1}).
-	%% Note: As opposed to the traditional way of implementing union-find 
-    %% algorithm, {@link leap_disjoint_sets.erl} does not define a leader per 
+	%% Note: As opposed to the traditional way of implementing union-find
+    %% algorithm, {@link leap_disjoint_sets.erl} does not define a leader per
     %% equivalence class, thus we need to do it here.
 	MGU1 = lists:foldl(
-        fun(L, Acc) -> find_substitutions_in_class(type1, L, Acc) end, 
+        fun(L, Acc) -> find_substitutions_in_class(type1, L, Acc) end,
         MGU0, Type1s),
-	
-	%% Rule 2: For a Type 2 set, pick the constant as a leader. 
+
+	%% Rule 2: For a Type 2 set, pick the constant as a leader.
 	%% Then for each variable in the set assign the leader as its substitution.
-	%% e.g. if the class is [X,Y,a] and a is designated as leader then this 
+	%% e.g. if the class is [X,Y,a] and a is designated as leader then this
     %% operation will return the substitution [{X,a}, {Y,a}].
 	MGU2 = lists:foldl(
-        fun(L, Acc) -> find_substitutions_in_class(type2, L, Acc) end, 
+        fun(L, Acc) -> find_substitutions_in_class(type2, L, Acc) end,
         MGU1, Type2s),
-	
-	%% Rule 3: For a Type 3 set, pick as a leader, a function symbol for which 
-    %% all variables have had a substitution defined for them (by having 
-    %% applied rules 1 and 2). 
-	%% Then for each variable in the set assign the leader's substitution as 
+
+	%% Rule 3: For a Type 3 set, pick as a leader, a function symbol for which
+    %% all variables have had a substitution defined for them (by having
+    %% applied rules 1 and 2).
+	%% Then for each variable in the set assign the leader's substitution as
     %% its substitution.
-	%%% The issue here is that we need to find an order to treat each Type3 
-    %% class, in order to be able to resolve function symbols. 
-	%% We are going to order the sets according to their variable count in 
-    %% descending order so that we can process first those sets containing the 
-    %% higher number of variables. In this way we maximise the chance to 
+	%%% The issue here is that we need to find an order to treat each Type3
+    %% class, in order to be able to resolve function symbols.
+	%% We are going to order the sets according to their variable count in
+    %% descending order so that we can process first those sets containing the
+    %% higher number of variables. In this way we maximise the chance to
     %% resolve a variable binding on the function symbols.
 
-	% @TODO Analyse if sorting the sets according to the term depth of the function symbols would enhance 
+	% @TODO Analyse if sorting the sets according to the term depth of the function symbols would enhance
 	% the efficieny and/or effectiveness of the algorithm.
 	% @TODO WE STILL NEED TO DEMONSTRATE UNIFY IS UNIVERSALLY EFFECTIVE in presence of function symbols
-	Sorter = fun(A, B) -> 
+	Sorter = fun(A, B) ->
 		ALen = length(lists:filter(fun(X) -> element(1,X) == var end, A)),
 		BLen = length(lists:filter(fun(X) -> element(1,X) == var end, B)),
 		ALen >= BLen
 	end,
 	Type3sSorted = lists:sort(Sorter, Type3s),
 	MGU3 = lists:foldl(
-        fun(L, Acc) -> find_substitutions_in_class(type3, L, Acc) end, 
+        fun(L, Acc) -> find_substitutions_in_class(type3, L, Acc) end,
         MGU2, Type3sSorted),
-	
-	% @TODO: We are not yet using the incrementally constructed MGU to check whether all variables have been resolved. 
+
+	% @TODO: We are not yet using the incrementally constructed MGU to check whether all variables have been resolved.
 	% Could this allow us to avoid unnecessary work?
 
-	%% If the above steps succeed in defining valid substitutions for all 
-    %% variables i.e. replacing all no_substitution values, then the unifier is 
+	%% If the above steps succeed in defining valid substitutions for all
+    %% variables i.e. replacing all no_substitution values, then the unifier is
     %% the MGU; otherwise, there is no MGU.
 	IsValid = fun
-		({var, _}, no_substitution, Acc) -> 
+		({var, _}, no_substitution, Acc) ->
 			Acc + 1;
-		({var, _}, _, Acc) -> 
+		({var, _}, _, Acc) ->
 			Acc;
 		(_, _, Acc) ->
 			Acc + 1
 	end,
 	case maps:fold(IsValid, 0, MGU3) == 0 of
-		true -> 
+		true ->
 			{ok, MGU3};
-		false -> 
+		false ->
 			false
 	end.
 
 
 %% -----------------------------------------------------------------------------
-%% @private	
+%% @private
 %% @doc
 %% @end
 %% -----------------------------------------------------------------------------
@@ -1177,69 +1177,69 @@ find_substitutions_in_class(type1, [H], S) ->
 	maps:put(H, H, S);
 
 find_substitutions_in_class(type1, [Leader|_] = L, S) ->
-	%% We designate the head as the leader and construct a mapping 
+	%% We designate the head as the leader and construct a mapping
     %% from each variable (including the leader) to it
     lists:foldl(
         fun
-            (Var, Acc) when Var == Leader -> 
+            (Var, Acc) when Var == Leader ->
                 %% We remove the variable as it maps to itself
                 %% This is to return an idempotent substitution
                 maps:remove(Var, Acc);
-            (Var, Acc) -> 
-                maps:update(Var, Leader, Acc) 
+            (Var, Acc) ->
+                maps:update(Var, Leader, Acc)
         end,
         S, L);
 
 find_substitutions_in_class(type2, L, S) when is_list(L)->
-	%% We designate the head as the leader and construct a mapping 
+	%% We designate the head as the leader and construct a mapping
     %% from each variable to it
-	%% As there is only one constant per equivalence class we just need 
+	%% As there is only one constant per equivalence class we just need
     %% to skip the leader
     [K] = lists:filter(fun is_constant_element/1, L),
     lists:foldl(
         fun
             (Term, Acc) when Term == K ->
-                %% We do nothing becuase it is a constant 
+                %% We do nothing becuase it is a constant
                 Acc;
-            (Var, Acc) -> 
-                maps:update(Var, K, Acc) 
-        end, 
+            (Var, Acc) ->
+                maps:update(Var, K, Acc)
+        end,
         S, L);
 
 find_substitutions_in_class(type3, L, S) when is_list(L)->
-	%% We first separate the function symbols from the variables 
+	%% We first separate the function symbols from the variables
     %% in the equivalence class
 	{Vars, Funs} = lists:partition(
         fun
-            ({var, _}) -> true; 
-            (_) -> false 
-        end, 
+            ({var, _}) -> true;
+            (_) -> false
+        end,
         L),
 
 	HasSubstitution = fun
 		({var, _} = Term) ->
 			case maps:find(Term, S) of
-				{ok, Value} -> 
+				{ok, Value} ->
 					Value =/= no_substitution;
-                error -> 
+                error ->
 					false
 			end;
-		(_) -> 
+		(_) ->
 			false
 	end,
-	%% We need to select a function as a leader for which all variables 
+	%% We need to select a function as a leader for which all variables
     %% have had an substitution defined.
-	%% The other functions are equivalent to the leader so we will 
+	%% The other functions are equivalent to the leader so we will
     %% not do anything with them.
 	LeaderSelector = fun({_S, Args}) -> lists:all(HasSubstitution, Args) end,
 	Leader = case lists:filter(LeaderSelector, Funs) of
-		[] -> 
+		[] ->
 			no_substitution;
-		[H|_T] -> 
+		[H|_T] ->
 			apply_substitution(H, S)
 	end,
 
-	%% We generate substitutions with the designated leader 
+	%% We generate substitutions with the designated leader
     %% for all variables in the class
 	maps:merge(S, maps:from_list([{X, Leader} || X <- Vars])).
 
@@ -1252,7 +1252,7 @@ find_substitutions_in_class(type3, L, S) when is_list(L)->
 %% -----------------------------------------------------------------------------
 unify_element(E, E, S) ->
     {ok, S};
-    
+
 unify_element('_', _, S) ->
 	{ok, S};
 
@@ -1306,7 +1306,7 @@ unify_var({var, _} = T1, T2, S0) ->
 		error ->
             %% We may bind T1 => T2
             S1 = maps:put(T1, T2, S0),
-            %% However if T2 is a var we 
+            %% However if T2 is a var we
             %% need to check that
 			case maps:find(T2, S1)  of
 				{ok, T3} ->
@@ -1334,7 +1334,7 @@ unify_var({var, _} = T1, T2, S0) ->
 % 			unify_var_aux(T2, T3, T1, S0);
 % 		error ->
 %             %% We may bind T1 => T2
-%             %% However if T2 is a var we 
+%             %% However if T2 is a var we
 %             %% need to check that
 % 			case maps:find(T2, S0)  of
 % 				{ok, T3} ->
@@ -1544,7 +1544,7 @@ subsumes_element({var, _} = Var, Term, S) ->
             {ok, S};
         {ok, _} ->
             %% The var T1 already has a substitution,
-            %% if this substitution is not equal to T2 then, 
+            %% if this substitution is not equal to T2 then,
             %% T1 does not subsume T2.
             false;
         error ->
@@ -1603,10 +1603,10 @@ is_ground_map(Map) ->
 
 
 %% @private
-is_ground_element({var, _}) -> 
+is_ground_element({var, _}) ->
     false;
 
-is_ground_element('_') -> 
+is_ground_element('_') ->
     false;
 
 is_ground_element({function, _, L}) ->

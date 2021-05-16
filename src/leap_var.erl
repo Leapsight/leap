@@ -1,5 +1,5 @@
 %% --------------------------------------------------------------
-%% Copyright (C) Ngineo Limited 2011 - 2014. All rights reserved. 
+%% Copyright (C) Leapsight 2011 - 2014. All rights reserved.
 %% --------------------------------------------------------------
 
 -module(leap_var).
@@ -11,9 +11,9 @@
 -export_type([var/0]).
 
 -export([new/1]).
--export([name/1]). 
--export([is_valid/1]). 
--export([to_string/1]). 
+-export([name/1]).
+-export([is_valid/1]).
+-export([to_string/1]).
 -export([to_bitstring/1]).
 
 
