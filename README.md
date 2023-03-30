@@ -1,3 +1,4 @@
+```erlang
 H = {{var,scheme}, {var,host}, {var,realm}, {var,path}, {var,mod}, {var,state}}.
 L = [
     {http, "api.com", "realm:foo", "/a", a, #{}},
@@ -10,3 +11,4 @@ R = leap_relation:relation(H, L).
 RR = leap_relation:summarize(R, {{var,scheme}, {var, host}, {as, {function, collect, [{var, path}, {var, mod}, {var,state}]}, {var, foo}}}, #{}).
 
 leap_relation:summarize(RR, {{var,scheme}, {function, collect, [{var, host}, {var,<<"CollectOfpathmodstate">>}]}}, #{}).
+```
